@@ -1,12 +1,19 @@
 #include "sbn_tbl.h"
 #include "cfe_tbl_filedef.h"
 
-SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {{/* [0] */
+SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {
+                                                {/* [0] */
                                                   .Name        = "UDP",
                                                   .LibFileName = "/cf/sbn_udp.so",
                                                   .LibSymbol   = "SBN_UDP_Ops",
-                                                  .BaseEID     = 0x0100}},
-                             .ProtocolCnt     = 1,
+                                                  .BaseEID     = 0x0100},
+                                                {/* [1] */
+                                                  .Name        = "TCP",
+                                                  .LibFileName = "/cf/sbn_tcp.so",
+                                                  .LibSymbol   = "SBN_TCP_Ops",
+                                                  .BaseEID     = 0x0200}
+                                                },
+                             .ProtocolCnt     = 2,
                              .FilterModules   = {{/* [0] */
                                                 .Name        = "Remap",
                                                 .LibFileName = "/cf/sbn_f_remap.so",
@@ -20,9 +27,9 @@ SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {{/* [0] */
                                       .ProcessorID  = 1,
                                       .SpacecraftID = 0x42,
                                       .NetNum       = 0,
-                                      .ProtocolName = "UDP",
+                                      .ProtocolName = "TCP",
                                       .Filters      = {"Remap"},
-                                      .Address      = "127.0.0.1:2234",
+                                      .Address      = "127.0.0.1:6379",
                                       .TaskFlags    = SBN_TASK_POLL},
                                      {/* [1] */
                                       .ProcessorID  = 2,
