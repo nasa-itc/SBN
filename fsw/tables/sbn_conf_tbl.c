@@ -9,6 +9,13 @@ SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {
                                                   .BaseEID     = 0x0200}
                                                 },
                              .ProtocolCnt     = 1,
+                             //.FilterModules   = {{/* [0] */
+                             //                   .Name        = "Remap",
+                             //                   .LibFileName = "/cf/sbn_f_remap.so",
+                             //                   .LibSymbol   = "SBN_F_Remap",
+                             //                   .BaseEID     = 0x1000}},
+                             .FilterCnt       = 0,
+
                              .Peers =
                                  {
                                      {/* [0] */ //cFS
