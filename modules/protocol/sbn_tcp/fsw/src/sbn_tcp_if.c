@@ -7,6 +7,13 @@
 #include <string.h>
 #include <errno.h>
 
+/* Start additional includes for hostname snippet */
+#include<sys/socket.h>
+#include<netdb.h>	//hostent
+#include<arpa/inet.h>
+
+/* End additional includes for hostname snippet */
+
 #define SBN_TCP_HEARTBEAT_MSG 0xA0
 
 /**
@@ -24,6 +31,11 @@
  */
 /* #define SBN_TCP_PEER_TIMEOUT 10 */
 #define SBN_TCP_PEER_TIMEOUT 0
+
+
+/* Define Ports for FSW and OnAIR sides of SBN for hacky DNS Resolution. Should be removed if fixed */
+long fsw_port = 2234;
+long onair_port 2235;
 
 typedef struct
 {
@@ -101,6 +113,57 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid port");
         return SBN_ERROR;
     } /* end if */
+
+    if (Port == fsw_port)
+    {
+        /* 
+           DNS Resolution for FSW Container 
+           Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
+        */
+        struct hostent *he;
+        struct in_addr **addr_list;
+        int i;
+
+        if ( (he = gethostbyname("sc1_nos3_fsw") ) != NULL) 
+        {
+            addr_list = (struct in_addr **) he->h_addr_list;
+            for(i = 0; addr_list[i] != NULL; i++) 
+            {
+                //Return the first one;
+                strncpy(&AddrHost, inet_ntoa(*addr_list[i]) );
+                break;
+            }
+        }
+        /* 
+            End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
+        */
+
+    }
+
+    if (Port == onair_port)
+    {
+        /* 
+           DNS Resolution for FSW Container 
+           Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
+        */
+        struct hostent *he;
+        struct in_addr **addr_list;
+        int i;
+
+        if ( (he = gethostbyname("sc1_OnAIR") ) != NULL) 
+        {
+            addr_list = (struct in_addr **) he->h_addr_list;
+            for(i = 0; addr_list[i] != NULL; i++) 
+            {
+                //Return the first one;
+                strncpy(&AddrHost, inet_ntoa(*addr_list[i]) );
+                break;
+            }
+        }
+        /* 
+            End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
+        */
+    }
 
     if (OS_SocketAddrInit(Addr, OS_SocketDomain_INET) != OS_SUCCESS)
     {
