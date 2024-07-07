@@ -35,7 +35,7 @@
 
 /* Define Ports for FSW and OnAIR sides of SBN for hacky DNS Resolution. Should be removed if fixed */
 long fsw_port = 2234;
-long onair_port 2235;
+long onair_port = 2235;
 
 typedef struct
 {
@@ -130,7 +130,7 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
             for(i = 0; addr_list[i] != NULL; i++) 
             {
                 //Return the first one;
-                strncpy(&AddrHost, inet_ntoa(*addr_list[i]) );
+                strcpy(&AddrHost, inet_ntoa(*addr_list[i]) );
                 break;
             }
         }
@@ -156,7 +156,7 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
             for(i = 0; addr_list[i] != NULL; i++) 
             {
                 //Return the first one;
-                strncpy(&AddrHost, inet_ntoa(*addr_list[i]) );
+                strcpy(&AddrHost, inet_ntoa(*addr_list[i]) );
                 break;
             }
         }
