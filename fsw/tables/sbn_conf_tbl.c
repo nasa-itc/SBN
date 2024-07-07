@@ -24,7 +24,7 @@ SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {
                                       .NetNum       = 0,
                                       .ProtocolName = "TCP",
                                       // .Filters      = {"Remap"},
-                                      .Address      = "127.0.0.1:2234",
+                                      .Address      = "sc_1_nos3_fsw:2234",
                                       .TaskFlags    = SBN_TASK_POLL},
                                      {/* [1] */ //OnAIR
                                       .ProcessorID  = 2,
@@ -32,7 +32,7 @@ SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {
                                       .NetNum       = 0,
                                       .ProtocolName = "TCP",
                                       // .Filters      = {"Remap"},
-                                      .Address      = "127.0.0.1:2235",
+                                      .Address      = "sc_1_onair:2235",
                                       .TaskFlags    = SBN_TASK_POLL},
                                  },
                              .PeerCnt = 2};
