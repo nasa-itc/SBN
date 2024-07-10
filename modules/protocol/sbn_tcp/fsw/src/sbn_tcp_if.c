@@ -131,7 +131,7 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
             {
                 //Return the first one;
                 strcpy(Addr, inet_ntoa(*addr_list[i]) );
-                strcpy(AddrHost, inet_ntoa(*addr_list[i]) );
+                strcpy(&AddrHost, inet_ntoa(*addr_list[i]) );
                 break;
             }
         }
@@ -158,7 +158,7 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
             {
                 //Return the first one;
                 strcpy(Addr, inet_ntoa(*addr_list[i]) );
-                strcpy(AddrHost, inet_ntoa(*addr_list[i]) );
+                strcpy(&AddrHost, inet_ntoa(*addr_list[i]) );
                 break;
             }
         }
