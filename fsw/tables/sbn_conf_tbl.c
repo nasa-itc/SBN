@@ -20,7 +20,8 @@ SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {
                                  {
                                      {/* [0] */ //cFS
                                       .ProcessorID  = 1,
-                                      .SpacecraftID = 0x42,
+                                      .SpacecraftID = 0x2A,
+                                      // .SpacecraftID = 0x42,
                                       .NetNum       = 0,
                                       .ProtocolName = "TCP",
                                       // .Filters      = {"Remap"},
@@ -28,7 +29,8 @@ SBN_ConfTbl_t SBN_ConfTbl = {.ProtocolModules = {
                                       .TaskFlags    = SBN_TASK_POLL},
                                      {/* [1] */ //OnAIR
                                       .ProcessorID  = 2,
-                                      .SpacecraftID = 0x42,
+                                      .SpacecraftID = 0x2A,
+                                      // .SpacecraftID = 0x42,
                                       .NetNum       = 0,
                                       .ProtocolName = "TCP",
                                       // .Filters      = {"Remap"},
