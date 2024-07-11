@@ -117,79 +117,20 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
         return SBN_ERROR;
     } /* end if */
 
-    // if (Port == fsw_port)
-    // {
-    //     /* 
-    //        DNS Resolution for FSW Container 
-    //        Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
-    //     */
-    //     struct hostent *he;
-    //     struct in_addr **addr_list;
-    //     int i;
-
-    //     if ( (he = gethostbyname("sc_1_nos3_fsw") ) != NULL) 
-    //     {
-    //         addr_list = (struct in_addr **) he->h_addr_list;
-    //         for(i = 0; addr_list[i] != NULL; i++) 
-    //         {
-    //             //Return the first one;
-    //             strcpy(Addr, inet_ntoa(*addr_list[i]) );
-    //             strcpy(&AddrHost, inet_ntoa(*addr_list[i]) );
-    //             break;
-    //         }
-    //     }
-    //     /* 
-    //         End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
-    //     */
-
-    // }
-
-    // if (Port == onair_port)
-    // {
-    //     /* 
-    //        DNS Resolution for FSW Container 
-    //        Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
-    //     */
-    //     struct hostent *he;
-    //     struct in_addr **addr_list;
-    //     int i;
-
-    //     if ( (he = gethostbyname("sc_1_onair") ) != NULL) 
-    //     {
-    //         addr_list = (struct in_addr **) he->h_addr_list;
-    //         for(i = 0; addr_list[i] != NULL; i++) 
-    //         {
-    //             //Return the first one;
-    //             strcpy(&Addr->AddrData, inet_ntoa(*addr_list[i]) );
-    //             Addr->ActualLength = length(Addr->AddrData);
-    //             strcpy(&AddrHost, inet_ntoa(*addr_list[i]) );
-    //             break;
-    //         }
-    //     }
-    //     /* 
-    //         End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
-    //     */
-    // }
-
     if (OS_SocketAddrInit(Addr, OS_SocketDomain_INET) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "socket addr init failed");
         return SBN_ERROR;
     } /* end if */
 
-    // if (OS_SocketAddrFromString(Addr, AddrHost) != OS_SUCCESS)
-    // {
-    //     EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrHost);
-    //     return SBN_ERROR;
-    // } /* end if */
+    char AddrV4[OS_MAX_API_NAME];
     
-
     /* 
         DNS Resolution for FSW Container 
         Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
     */
     struct hostent *he;
-    struct in_addr **addr_list;
+    struct in_addr **addr_list;    
     int i;
 
     if ( (he = gethostbyname(AddrHost) ) != NULL) 
@@ -198,13 +139,19 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
         for(i = 0; addr_list[i] != NULL; i++) 
         {
             //Return the first one;
-            strcpy(&Addr, inet_ntoa(*addr_list[i]) );
+            strcpy(&AddrV4, inet_ntoa(*addr_list[i]) );
             break;
         }
     }
     /* 
         End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
     */
+
+    if (OS_SocketAddrFromString(Addr, AddrV4) != OS_SUCCESS)
+    {
+        EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrV4);
+        return SBN_ERROR;
+    } /* end if */
 
 
     if (OS_SocketAddrSetPort(Addr, Port) != OS_SUCCESS)
