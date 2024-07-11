@@ -103,25 +103,36 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid net address");
         return SBN_ERROR;
+        OS_printf("Failed Colon!\n");
     } /* end if */
+
+    OS_printf("Passed Colon!\n");
 
     strncpy(AddrHost, Address, AddrLen);
     AddrHost[AddrLen] = '\0';
     char *ValidatePtr = NULL;
+    OS_printf("Passed AddrHost!\n");
 
     OS_SocketPort_t Port = strtol(Colon + 1, &ValidatePtr, 0);
+    OS_printf("Passed Port creation!\n");
 
     if (!ValidatePtr || ValidatePtr == Colon + 1)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid port");
+        OS_printf("Failed Port Verification!\n");
         return SBN_ERROR;
     } /* end if */
 
+    OS_printf("Passed Port Verification!\n");
+
     if (OS_SocketAddrInit(Addr, OS_SocketDomain_INET) != OS_SUCCESS)
-    {
+    {   
         EVSSendErr(SBN_TCP_SOCK_EID, "socket addr init failed");
+        OS_printf("Failed Addr Initialization!\n");
         return SBN_ERROR;
     } /* end if */
+
+    OS_printf("Passed Addr Initialization!\n");
 
     char AddrV4[OS_MAX_API_NAME];
     
@@ -133,15 +144,33 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
     struct in_addr **addr_list;    
     int i;
 
-    if ( (he = gethostbyname(AddrHost) ) != NULL) 
+    
+
+    OS_printf("Starting Name Resolution on %s!\n", AddrHost);
+
+    he = gethostbyname(&AddrHost);
+
+    OS_printf("he Values:\n  name = %s;\n  addr_type = %d;\n  len = %d;\nAddr List:\n", he->h_name, he->h_addrtype, he->h_length);
+
+    for(int j = 0; he->h_addr_list[j] != NULL; j++)
+    {
+        OS_printf("  %s\n", he->h_addr_list[j]);
+    }
+
+    if (he != NULL) 
     {
         addr_list = (struct in_addr **) he->h_addr_list;
         for(i = 0; addr_list[i] != NULL; i++) 
         {
             //Return the first one;
             strcpy(&AddrV4, inet_ntoa(*addr_list[i]) );
+            OS_printf("Passed DNS Name Resolution!\n");
             break;
         }
+    }
+    else
+    {
+        OS_printf("Failed Name Resolution, gethostbyname(%s) returned NULL!\n", AddrHost);
     }
     /* 
         End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
@@ -149,16 +178,20 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
 
     if (OS_SocketAddrFromString(Addr, AddrV4) != OS_SUCCESS)
     {
+        OS_printf("Failed Set Address!\n");
         EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrV4);
         return SBN_ERROR;
     } /* end if */
-
+    OS_printf("Passed Set Address!\n");
 
     if (OS_SocketAddrSetPort(Addr, Port) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "setting address port failed (Port=%d)", Port);
+        OS_printf("Failed Set Port!\n");
         return SBN_ERROR;
     } /* end if */
+
+    OS_printf("Passed Set Port!\n");
 
     return SBN_SUCCESS;
 } /* end ConfAddr() */
