@@ -144,12 +144,35 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
     struct in_addr **addr_list;    
     int i;
 
-    
+//  Beginning attempt at switching over to use getaddrinfo 
+    int sockfd;  
+    struct addrinfo hints, *servinfo, *p;
+    int rv;
 
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_UNSPEC; // use AF_INET6 to force IPv6
+    hints.ai_socktype = SOCK_STREAM;
+
+    OS_printf("Just before trying to getaddrinfo\n");
+
+    if ((rv = getaddrinfo(AddrHost, NULL, &hints, &servinfo)) != 0) {
+        fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+        exit(1);
+    }
+    else {
+        addr_list = servinfo->ai_addr;
+        OS_printf("New alternative working?\n");
+//        addr_list = ((sockaddr_in)(servinfo->ai_addr))->sin_addr;
+    }
+    freeaddrinfo(servinfo); // all done with this structure
+//  End of attempts to use getaddrinfo 
+
+/*
     OS_printf("Starting Name Resolution on %s!\n", AddrHost);
 
-    he = gethostbyname(&AddrHost);
+    he = gethostbyname(AddrHost);
 
+    OS_printf("Just after gethostbyname\n");
     OS_printf("he Values:\n  name = %s;\n  addr_type = %d;\n  len = %d;\nAddr List:\n", he->h_name, he->h_addrtype, he->h_length);
 
     for(int j = 0; he->h_addr_list[j] != NULL; j++)
@@ -172,6 +195,7 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
     {
         OS_printf("Failed Name Resolution, gethostbyname(%s) returned NULL!\n", AddrHost);
     }
+*/
     /* 
         End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
     */
