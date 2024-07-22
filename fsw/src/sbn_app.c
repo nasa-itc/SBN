@@ -179,7 +179,7 @@ SBN_Status_t SBN_Connected(SBN_PeerInterface_t *Peer)
         return SBN_ERROR;
     } /* end if */
 
-    EVSSendInfo(SBN_PEER_EID, "Created peer pipe '%s'", PipeName);
+    EVSSendInfo(SBN_PEER_EID, "Created peer pipe '%s', ID '%d'", PipeName, Peer->Pipe);
 
     CFE_Status = CFE_SB_SetPipeOpts(Peer->Pipe, CFE_SB_PIPEOPTS_IGNOREMINE);
     if (CFE_Status != CFE_SUCCESS)
