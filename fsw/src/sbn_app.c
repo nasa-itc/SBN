@@ -399,7 +399,7 @@ void SBN_RecvNetTask(void)
         D.Peer = SBN_GetPeer(D.Net, D.ProcessorID, D.SpacecraftID);
         if (!D.Peer)
         {
-            EVSSendErr(SBN_PEERTASK_EID, "unknown peer (ProcessorID=%d)", (int)D.ProcessorID);
+            EVSSendErr(SBN_PEERTASK_EID, "SBN RecvNetTask: unknown peer (ProcessorID=%d)", D.ProcessorID);
             break;
         } /* end if */
 
@@ -463,7 +463,7 @@ SBN_Status_t SBN_RecvNetMsgs(void)
 
                 if (!Peer)
                 {
-                    EVSSendInfo(SBN_PEERTASK_EID, "unknown peer (ProcessorID=%d)", (int)ProcessorID);
+                    EVSSendInfo(SBN_PEERTASK_EID, "SBN RecvNetMsgs: unknown peer (ProcessorID=%d)", ProcessorID);
                     /* may be a misconfiguration on my part...? continue processing msgs... */
                     continue;
                 } /* end if */
@@ -1603,7 +1603,7 @@ SBN_Status_t SBN_ProcessNetMsg(SBN_NetInterface_t *Net, SBN_MsgType_t MsgType, C
 
     if (!Peer)
     {
-        EVSSendErr(SBN_PEERTASK_EID, "%s unknown peer (ProcessorID=%d)", FAIL_PREFIX, (int)ProcessorID);
+        EVSSendErr(SBN_PEERTASK_EID, "SBN ProcessNetMesg%s unknown peer (ProcessorID=%d)", FAIL_PREFIX, ProcessorID);
         return SBN_ERROR;
     } /* end if */
 
