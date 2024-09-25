@@ -417,6 +417,8 @@ static SBN_Status_t ProcessSubFromPeer(SBN_PeerInterface_t *Peer, CFE_SB_MsgId_t
     Filter_Context.PeerProcessorID = Peer->ProcessorID;
     Filter_Context.PeerSpacecraftID  = Peer->SpacecraftID;
 
+    printf("ProcessSubFromPeer: MyProcessorID = %d, MySpacecraftID = %d, PeerProcessorID = %d, PeerSpacecraftID = %d, MsgID = 0x%04x\n", Filter_Context.MyProcessorID, Filter_Context.MySpacecraftID, Filter_Context.PeerProcessorID, Filter_Context.PeerSpacecraftID, MsgID);
+
     for (FilterIdx = 0; FilterIdx < Peer->FilterCnt; FilterIdx++)
     {
         if (Peer->Filters[FilterIdx]->RemapMID == NULL)
