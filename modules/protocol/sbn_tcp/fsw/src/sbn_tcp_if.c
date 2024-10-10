@@ -437,13 +437,17 @@ static SBN_Status_t Send(SBN_PeerInterface_t *Peer, SBN_MsgType_t MsgType, SBN_M
 
     SBN.PackMsg(&SendBufs[NetData->BufNum], MsgSz, MsgType, CFE_PSP_GetProcessorId(), CFE_PSP_GetSpacecraftId(), Msg);
 
-    printf("sbn_tcp_if.c send: MsgType = %d, MsgSz = %d, Msg = 0x", MsgType, MsgSz);
-    uint8_t * msg_char = (uint8_t*) Msg;
-    for(SBN_MsgSz_t i = 0; i < MsgSz; i++)
+    if(MsgType != SBN_TCP_HEARTBEAT_MSG)
     {
-        printf("%02x", (uint8_t*) msg_char[i]);
+        printf("sbn_tcp_if.c send: MsgType = %d, MsgSz = %d, Msg = 0x", MsgType, MsgSz);
+        uint8_t * msg_char = (uint8_t*) Msg;
+        for(SBN_MsgSz_t i = 0; i < MsgSz; i++)
+        {
+            printf("%02x", (uint8_t*) msg_char[i]);
+        }
+        printf("\n");
     }
-    printf("\n");
+
 
     SBN_MsgSz_t sent_size = OS_write(PeerData->Conn->Socket, &SendBufs[NetData->BufNum], MsgSz + SBN_PACKED_HDR_SZ);
     if (sent_size < MsgSz + SBN_PACKED_HDR_SZ)
