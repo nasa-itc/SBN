@@ -38,6 +38,9 @@ SBN_App_t SBN;
 #include <string.h>
 #include "sbn_app.h"
 
+// Subscriptions to App Data:
+// #include "sample_msgids.h"
+
 static SBN_Status_t UnloadNets(void);
 
 static SBN_Status_t UnloadModules(void)
@@ -1393,6 +1396,12 @@ static SBN_Status_t SetupSubPipe(void)
         return SBN_ERROR;
     } /* end if */
 
+    // Status = CFE_SB_SubscribeLocal(CFE_SB_ValueToMsgId(SAMPLE_HK_TLM_MID), SBN.SubPipe, SBN_MAX_ONESUB_PKTS_ON_PIPE);
+    // if (Status != CFE_SUCCESS)
+    // {
+    //     EVSSendErr(SBN_INIT_EID, "failed to subscribe to sub (Status=%d)", (int)Status);
+    //     return SBN_ERROR;
+    // } /* end if */
 
     return SBN_SUCCESS;
 }
@@ -1612,6 +1621,14 @@ SBN_Status_t SBN_ProcessNetMsg(SBN_NetInterface_t *Net, SBN_MsgType_t MsgType, C
       EVSSendDbg(SBN_PEERTASK_EID, "SBN received module-specific message type: 0x%08x", MsgType);
       return SBN_SUCCESS;
     }
+    
+    printf("snb_app: ProcessNetMsg: MsgType = %d, MsgSz = %d, ProcessorID = %d, SpacecraftID = %d, Msg = 0x", MsgType, MsgSize, ProcessorID, SpacecraftID);
+    uint8_t * msg_char = (uint8_t*) Msg;
+    for(SBN_MsgSz_t i = 0; i < MsgSize; i++)
+    {
+        printf("%02x", (uint8_t*) msg_char[i]);
+    }
+    printf("\n");
 
     switch (MsgType)
     {

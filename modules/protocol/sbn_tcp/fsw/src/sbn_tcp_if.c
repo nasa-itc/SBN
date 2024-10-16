@@ -596,6 +596,17 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
                 return SBN_ERROR;
             } /* end if */
 
+            if(*MsgTypePtr != SBN_TCP_HEARTBEAT_MSG)
+            {
+                printf("sbn_tcp_if.c Recv: MsgType = %d, MsgSz = %d, Msg = 0x", *MsgTypePtr, *MsgSzPtr);
+                uint8_t * msg_char = (uint8_t*) MsgBuf;
+                for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+                {
+                    printf("%02x", (uint8_t*) msg_char[i]);
+                }
+                printf("\n");
+            }
+
             if (!Conn->PeerInterface)
             {
                 /* New peer, link it to the connection */
