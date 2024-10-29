@@ -23,7 +23,7 @@
  * messages will be generated.
  */
 #define SBN_TCP_PEER_HEARTBEAT 5
-/* #define SBN_TCP_PEER_HEARTBEAT 0 */
+// #define SBN_TCP_PEER_HEARTBEAT 0
 
 /**
  * If I haven't received a message from a peer in SBN_TCP_PEER_TIMEOUT seconds,
@@ -569,6 +569,14 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 Received = OS_read(Conn->Socket, (char *)&RecvBufs[Conn->BufNum] + Conn->RecvSz, ToRead);
 
+                printf("sbn_tcp_if: Recv: RecvBufs: 0x");
+                uint8_t * read_char = (uint8_t*) RecvBufs;
+                for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+                {
+                    printf("%02x", (uint8_t*) read_char[i]);
+                }
+                printf("\n");
+
                 if (Received <= 0)
                 {
                     CFE_ProcessorID_t ProcessorID = -1;
@@ -595,17 +603,14 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 return SBN_ERROR;
             } /* end if */
-
-            if(*MsgTypePtr != SBN_TCP_HEARTBEAT_MSG)
+              
+            printf("sbn_tcp_if.c Recv: MsgType = %d, MsgSz = %d, Msg = 0x", *MsgTypePtr, *MsgSzPtr);
+            uint8_t * msg_char = (uint8_t*) MsgBuf;
+            for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
             {
-                printf("sbn_tcp_if.c Recv: MsgType = %d, MsgSz = %d, Msg = 0x", *MsgTypePtr, *MsgSzPtr);
-                uint8_t * msg_char = (uint8_t*) MsgBuf;
-                for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
-                {
-                    printf("%02x", (uint8_t*) msg_char[i]);
-                }
-                printf("\n");
+                printf("%02x", (uint8_t*) msg_char[i]);
             }
+            printf("\n");
 
             if (!Conn->PeerInterface)
             {
