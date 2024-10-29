@@ -569,13 +569,13 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 Received = OS_read(Conn->Socket, (char *)&RecvBufs[Conn->BufNum] + Conn->RecvSz, ToRead);
 
-                printf("sbn_tcp_if: Recv: RecvBufs: 0x");
-                uint8_t * read_char = (uint8_t*) RecvBufs;
-                for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
-                {
-                    printf("%02x", (uint8_t*) read_char[i]);
-                }
-                printf("\n");
+                //printf("sbn_tcp_if: Recv: RecvBufs: 0x");
+                //uint8_t * read_char = (uint8_t*) RecvBufs;
+                //for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+                //{
+                //    printf("%02x", (uint8_t*) read_char[i]);
+                //}
+                //printf("\n");
 
                 if (Received <= 0)
                 {
