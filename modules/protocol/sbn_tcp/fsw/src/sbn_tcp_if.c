@@ -185,7 +185,7 @@ static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
         for(i = 0; addr_list[i] != NULL; i++) 
         {
             //Return the first one;
-            strcpy(&AddrV4, inet_ntoa(*addr_list[i]));
+            strcpy(AddrV4, inet_ntoa(*addr_list[i]));
             OS_printf("Passed DNS Name Resolution!\n");
             break;
         }
