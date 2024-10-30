@@ -77,13 +77,13 @@ static SBN_Status_t SendLocalSubToPeer(int SubType, CFE_SB_MsgId_t MsgID, CFE_SB
     Pack_MsgID(&Pack, MsgID);
     Pack_Data(&Pack, &QoS, sizeof(QoS)); /* 2 uint8's */
 
-    printf("sbn_subs: SendLocalSubToPeer: Type: %d, MsgID: %lu, MsgSz: %lu, Msg 0x", SubType, CFE_SB_MsgIdToValue(MsgID), Pack.BufUsed);
-    uint8_t * msg_char = (uint8_t*) Buf;
-    for(size_t i = 0; i < Pack.BufUsed; i++)
-    {
-        printf("%02x", (uint8_t*) msg_char[i]);
-    }
-    printf("\n");
+    // printf("sbn_subs: SendLocalSubToPeer: Type: %d, MsgID: %lu, MsgSz: %lu, Msg 0x", SubType, CFE_SB_MsgIdToValue(MsgID), Pack.BufUsed);
+    // uint8_t * msg_char = (uint8_t*) Buf;
+    // for(size_t i = 0; i < Pack.BufUsed; i++)
+    // {
+    //     printf("%02x", (uint8_t*) msg_char[i]);
+    // }
+    // printf("\n");
 
     EVSSendDbg(SBN_PEER_EID, "send local sub to peer %d:%d", Peer->SpacecraftID, Peer->ProcessorID);
     return SBN_SendNetMsg(SubType, Pack.BufUsed, Buf, Peer);

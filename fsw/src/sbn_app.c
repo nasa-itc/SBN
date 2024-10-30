@@ -464,12 +464,12 @@ SBN_Status_t SBN_RecvNetMsgs(void)
                  */
                 SBN_PeerInterface_t *Peer = SBN_GetPeer(Net, ProcessorID, SpacecraftID);
 
-                printf("sbn_app: RecvNetMsgs: ProcessorID: %lu; SCID: %lu, MsgType: %u, MsgSz: %d, Msg: 0x", ProcessorID, SpacecraftID, MsgType, MsgSz);
-                for(size_t i = 0; i < MsgSz; i++)
-                {
-                    printf("%02x", (uint8_t*) SBN.MsgBuffer[i]);
-                }
-                printf("\n");
+                // printf("sbn_app: RecvNetMsgs: ProcessorID: %lu; SCID: %lu, MsgType: %u, MsgSz: %d, Msg: 0x", ProcessorID, SpacecraftID, MsgType, MsgSz);
+                // for(size_t i = 0; i < MsgSz; i++)
+                // {
+                //     printf("%02x", (uint8_t*) SBN.MsgBuffer[i]);
+                // }
+                // printf("\n");
 
                 if (!Peer)
                 {
@@ -1612,13 +1612,13 @@ SBN_Status_t SBN_ProcessNetMsg(SBN_NetInterface_t *Net, SBN_MsgType_t MsgType, C
                                CFE_SpacecraftID_t SpacecraftID,
                                SBN_MsgSz_t MsgSize, void *Msg)
 {
-    printf("sbn_app: ProcessNetMsg: Start on Packet from Proc %lu, SCID %lu, MsgType: %u, MsgSz: %d, Msg0x", ProcessorID, SpacecraftID, MsgType, MsgSize);
-    uint8_t * msg_char = (uint8_t*) Msg;
-    for(SBN_MsgSz_t i = 0; i < MsgSize; i++)
-    {
-        printf("%02x", (uint8_t*) msg_char[i]);
-    }
-    printf("\n");
+    // printf("sbn_app: ProcessNetMsg: Start on Packet from Proc %lu, SCID %lu, MsgType: %u, MsgSz: %d, Msg0x", ProcessorID, SpacecraftID, MsgType, MsgSize);
+    // uint8_t * msg_char = (uint8_t*) Msg;
+    // for(SBN_MsgSz_t i = 0; i < MsgSize; i++)
+    // {
+    //     printf("%02x", (uint8_t*) msg_char[i]);
+    // }
+    // printf("\n");
 
     static const char FAIL_PREFIX[] = "ERROR: could not process peer message:";
     SBN_Status_t         SBN_Status = SBN_SUCCESS;
