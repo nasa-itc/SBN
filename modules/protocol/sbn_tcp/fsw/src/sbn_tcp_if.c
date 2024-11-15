@@ -6,6 +6,14 @@
 
 #include <string.h>
 #include <errno.h>
+// #include <stdlib.h>
+
+/* Start additional includes for hostname snippet */
+#include<sys/socket.h>
+#include<netdb.h>	//hostent
+#include<arpa/inet.h>
+
+/* End additional includes for hostname snippet */
 
 #define SBN_TCP_HEARTBEAT_MSG 0xA0
 
@@ -15,7 +23,7 @@
  * messages will be generated.
  */
 #define SBN_TCP_PEER_HEARTBEAT 5
-/* #define SBN_TCP_PEER_HEARTBEAT 0 */
+// #define SBN_TCP_PEER_HEARTBEAT 0
 
 /**
  * If I haven't received a message from a peer in SBN_TCP_PEER_TIMEOUT seconds,
@@ -24,6 +32,11 @@
  */
 /* #define SBN_TCP_PEER_TIMEOUT 10 */
 #define SBN_TCP_PEER_TIMEOUT 0
+
+
+/* Define Ports for FSW and OnAIR sides of SBN for hacky DNS Resolution. Should be removed if fixed */
+// int32 fsw_port = 2234;
+// int32 onair_port = 2235;
 
 typedef struct
 {
@@ -80,45 +93,128 @@ static SBN_Status_t Init(int Version, CFE_EVS_EventID_t EID, SBN_ProtocolOutlet_
 
 static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
 {
-    char  AddrHost[OS_MAX_API_NAME];
     int   AddrLen;
     char *Colon = strchr(Address, ':');
 
-    if (!Colon || (AddrLen = Colon - Address) >= OS_MAX_API_NAME)
+    AddrLen = Colon - Address;
+    char  AddrHost[AddrLen];
+
+    if (!Colon /*|| (AddrLen = Colon - Address) >= OS_MAX_API_NAME*/)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid net address");
         return SBN_ERROR;
+        OS_printf("Failed Colon!\n");
     } /* end if */
+
+    OS_printf("Passed Colon!\n");
 
     strncpy(AddrHost, Address, AddrLen);
     AddrHost[AddrLen] = '\0';
     char *ValidatePtr = NULL;
+    OS_printf("Passed AddrHost!\n");
 
     OS_SocketPort_t Port = strtol(Colon + 1, &ValidatePtr, 0);
+    OS_printf("Passed Port creation!\n");
 
     if (!ValidatePtr || ValidatePtr == Colon + 1)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid port");
+        OS_printf("Failed Port Verification!\n");
         return SBN_ERROR;
     } /* end if */
+
+    OS_printf("Passed Port Verification!\n");
 
     if (OS_SocketAddrInit(Addr, OS_SocketDomain_INET) != OS_SUCCESS)
-    {
+    {   
         EVSSendErr(SBN_TCP_SOCK_EID, "socket addr init failed");
+        OS_printf("Failed Addr Initialization!\n");
         return SBN_ERROR;
     } /* end if */
 
-    if (OS_SocketAddrFromString(Addr, AddrHost) != OS_SUCCESS)
+    OS_printf("Passed Addr Initialization!\n");
+
+    char AddrV4[OS_MAX_API_NAME];
+    
+    /* 
+        DNS Resolution for FSW Container 
+        Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
+    */
+    struct hostent *he;
+    struct in_addr **addr_list;    
+    int i;
+
+//  Beginning attempt at switching over to use getaddrinfo 
+//     int sockfd;  
+//     struct addrinfo hints, *servinfo, *p;
+//     int rv;
+
+//     memset(&hints, 0, sizeof hints);
+//     hints.ai_family = AF_UNSPEC; // use AF_INET6 to force IPv6
+//     hints.ai_socktype = SOCK_STREAM;
+
+//     OS_printf("Just before trying to getaddrinfo\n");
+
+//     if ((rv = getaddrinfo(AddrHost, NULL, &hints, &servinfo)) != 0) {
+//         fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
+//         exit(1);
+//     }
+//     else {
+//         addr_list = servinfo->ai_addr;
+//         OS_printf("New alternative working?\n");
+// //        addr_list = ((sockaddr_in)(servinfo->ai_addr))->sin_addr;
+//     }
+//     freeaddrinfo(servinfo); // all done with this structure
+//  End of attempts to use getaddrinfo 
+
+    OS_printf("Starting Name Resolution on %s!\n", AddrHost);
+
+    he = gethostbyname(AddrHost);
+
+    OS_printf("Just after gethostbyname\n");
+    OS_printf("he Values:\n  name = %s;\n  addr_type = %d;\n  len = %d;\nAddr List:\n", he->h_name, he->h_addrtype, he->h_length);
+
+    for(int j = 0; he->h_addr_list[j] != NULL; j++)
     {
-        EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrHost);
+        OS_printf("  %s\n", he->h_addr_list[j]);
+    }
+
+    if (he != NULL) 
+    {
+        addr_list = (struct in_addr **) he->h_addr_list;
+        for(i = 0; addr_list[i] != NULL; i++) 
+        {
+            //Return the first one;
+            strcpy(AddrV4, inet_ntoa(*addr_list[i]));
+            OS_printf("Passed DNS Name Resolution!\n");
+            break;
+        }
+    }
+    else
+    {
+        OS_printf("Failed Name Resolution, gethostbyname(%s) returned NULL!\n", AddrHost);
+    }
+
+    /* 
+        End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
+    */ 
+
+    if (OS_SocketAddrFromString(Addr, AddrV4) != OS_SUCCESS)
+    {
+        OS_printf("Failed Set Address!\n");
+        EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrV4);
         return SBN_ERROR;
     } /* end if */
+    OS_printf("Passed Set Address!\n");
 
     if (OS_SocketAddrSetPort(Addr, Port) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "setting address port failed (Port=%d)", Port);
+        OS_printf("Failed Set Port!\n");
         return SBN_ERROR;
     } /* end if */
+
+    OS_printf("Passed Set Port!\n");
 
     return SBN_SUCCESS;
 } /* end ConfAddr() */
@@ -340,6 +436,19 @@ static SBN_Status_t Send(SBN_PeerInterface_t *Peer, SBN_MsgType_t MsgType, SBN_M
     } /* end if */
 
     SBN.PackMsg(&SendBufs[NetData->BufNum], MsgSz, MsgType, CFE_PSP_GetProcessorId(), CFE_PSP_GetSpacecraftId(), Msg);
+
+    // if(MsgType != SBN_TCP_HEARTBEAT_MSG)
+    // {
+    //     printf("sbn_tcp_if.c send: MsgType = %d, MsgSz = %d, Msg = 0x", MsgType, MsgSz);
+    //     uint8_t * msg_char = (uint8_t*) Msg;
+    //     for(SBN_MsgSz_t i = 0; i < MsgSz; i++)
+    //     {
+    //         printf("%02x", (uint8_t*) msg_char[i]);
+    //     }
+    //     printf("\n");
+    // }
+
+
     SBN_MsgSz_t sent_size = OS_write(PeerData->Conn->Socket, &SendBufs[NetData->BufNum], MsgSz + SBN_PACKED_HDR_SZ);
     if (sent_size < MsgSz + SBN_PACKED_HDR_SZ)
     {
@@ -460,6 +569,14 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 Received = OS_read(Conn->Socket, (char *)&RecvBufs[Conn->BufNum] + Conn->RecvSz, ToRead);
 
+                //printf("sbn_tcp_if: Recv: RecvBufs: 0x");
+                //uint8_t * read_char = (uint8_t*) RecvBufs;
+                //for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+                //{
+                //    printf("%02x", (uint8_t*) read_char[i]);
+                //}
+                //printf("\n");
+
                 if (Received <= 0)
                 {
                     CFE_ProcessorID_t ProcessorID = -1;
@@ -486,6 +603,14 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 return SBN_ERROR;
             } /* end if */
+              
+            // printf("sbn_tcp_if.c Recv: MsgType = %d, MsgSz = %d, Msg = 0x", *MsgTypePtr, *MsgSzPtr);
+            // uint8_t * msg_char = (uint8_t*) MsgBuf;
+            // for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+            // {
+            //     printf("%02x", (uint8_t*) msg_char[i]);
+            // }
+            // printf("\n");
 
             if (!Conn->PeerInterface)
             {

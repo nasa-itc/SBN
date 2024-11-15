@@ -26,7 +26,7 @@
 
 #include "sbn_pack.h"
 #include "sbn_app.h"
-#include "cfe_sb_events.h" /* For event message IDs */
+#include "cfe_sb_eventids.h" /* For event message IDs */
 #include "cfe_es.h"        /* PerfLog */
 #include "cfe_platform_cfg.h"
 #include "cfe_msgids.h"
@@ -37,6 +37,9 @@ SBN_App_t SBN;
 
 #include <string.h>
 #include "sbn_app.h"
+
+// Subscriptions to App Data:
+// #include "sample_msgids.h"
 
 static SBN_Status_t UnloadNets(void);
 
@@ -179,7 +182,7 @@ SBN_Status_t SBN_Connected(SBN_PeerInterface_t *Peer)
         return SBN_ERROR;
     } /* end if */
 
-    EVSSendInfo(SBN_PEER_EID, "Created peer pipe '%s'", PipeName);
+    EVSSendInfo(SBN_PEER_EID, "Created peer pipe '%s', ID '%d'", PipeName, Peer->Pipe);
 
     CFE_Status = CFE_SB_SetPipeOpts(Peer->Pipe, CFE_SB_PIPEOPTS_IGNOREMINE);
     if (CFE_Status != CFE_SUCCESS)
@@ -399,7 +402,7 @@ void SBN_RecvNetTask(void)
         D.Peer = SBN_GetPeer(D.Net, D.ProcessorID, D.SpacecraftID);
         if (!D.Peer)
         {
-            EVSSendErr(SBN_PEERTASK_EID, "unknown peer (ProcessorID=%d)", (int)D.ProcessorID);
+            EVSSendErr(SBN_PEERTASK_EID, "SBN RecvNetTask: unknown peer (ProcessorID=%d)", D.ProcessorID);
             break;
         } /* end if */
 
@@ -461,9 +464,16 @@ SBN_Status_t SBN_RecvNetMsgs(void)
                  */
                 SBN_PeerInterface_t *Peer = SBN_GetPeer(Net, ProcessorID, SpacecraftID);
 
+                // printf("sbn_app: RecvNetMsgs: ProcessorID: %lu; SCID: %lu, MsgType: %u, MsgSz: %d, Msg: 0x", ProcessorID, SpacecraftID, MsgType, MsgSz);
+                // for(size_t i = 0; i < MsgSz; i++)
+                // {
+                //     printf("%02x", (uint8_t*) SBN.MsgBuffer[i]);
+                // }
+                // printf("\n");
+
                 if (!Peer)
                 {
-                    EVSSendInfo(SBN_PEERTASK_EID, "unknown peer (ProcessorID=%d)", (int)ProcessorID);
+                    EVSSendInfo(SBN_PEERTASK_EID, "SBN RecvNetMsgs: unknown peer (ProcessorID=%d)", ProcessorID);
                     /* may be a misconfiguration on my part...? continue processing msgs... */
                     continue;
                 } /* end if */
@@ -1393,6 +1403,12 @@ static SBN_Status_t SetupSubPipe(void)
         return SBN_ERROR;
     } /* end if */
 
+    // Status = CFE_SB_SubscribeLocal(CFE_SB_ValueToMsgId(SAMPLE_HK_TLM_MID), SBN.SubPipe, SBN_MAX_ONESUB_PKTS_ON_PIPE);
+    // if (Status != CFE_SUCCESS)
+    // {
+    //     EVSSendErr(SBN_INIT_EID, "failed to subscribe to sub (Status=%d)", (int)Status);
+    //     return SBN_ERROR;
+    // } /* end if */
 
     return SBN_SUCCESS;
 }
@@ -1596,6 +1612,14 @@ SBN_Status_t SBN_ProcessNetMsg(SBN_NetInterface_t *Net, SBN_MsgType_t MsgType, C
                                CFE_SpacecraftID_t SpacecraftID,
                                SBN_MsgSz_t MsgSize, void *Msg)
 {
+    // printf("sbn_app: ProcessNetMsg: Start on Packet from Proc %lu, SCID %lu, MsgType: %u, MsgSz: %d, Msg0x", ProcessorID, SpacecraftID, MsgType, MsgSize);
+    // uint8_t * msg_char = (uint8_t*) Msg;
+    // for(SBN_MsgSz_t i = 0; i < MsgSize; i++)
+    // {
+    //     printf("%02x", (uint8_t*) msg_char[i]);
+    // }
+    // printf("\n");
+
     static const char FAIL_PREFIX[] = "ERROR: could not process peer message:";
     SBN_Status_t         SBN_Status = SBN_SUCCESS;
     CFE_Status_t         CFE_Status = CFE_SUCCESS;
@@ -1603,7 +1627,7 @@ SBN_Status_t SBN_ProcessNetMsg(SBN_NetInterface_t *Net, SBN_MsgType_t MsgType, C
 
     if (!Peer)
     {
-        EVSSendErr(SBN_PEERTASK_EID, "%s unknown peer (ProcessorID=%d)", FAIL_PREFIX, (int)ProcessorID);
+        EVSSendErr(SBN_PEERTASK_EID, "SBN ProcessNetMesg%s unknown peer (ProcessorID=%d)", FAIL_PREFIX, ProcessorID);
         return SBN_ERROR;
     } /* end if */
 
@@ -1612,6 +1636,14 @@ SBN_Status_t SBN_ProcessNetMsg(SBN_NetInterface_t *Net, SBN_MsgType_t MsgType, C
       EVSSendDbg(SBN_PEERTASK_EID, "SBN received module-specific message type: 0x%08x", MsgType);
       return SBN_SUCCESS;
     }
+    
+    // printf("snb_app: ProcessNetMsg: MsgType = %d, MsgSz = %d, ProcessorID = %d, SpacecraftID = %d, Msg = 0x", MsgType, MsgSize, ProcessorID, SpacecraftID);
+    // uint8_t * msg_char = (uint8_t*) Msg;
+    // for(SBN_MsgSz_t i = 0; i < MsgSize; i++)
+    // {
+    //     printf("%02x", (uint8_t*) msg_char[i]);
+    // }
+    // printf("\n");
 
     switch (MsgType)
     {
