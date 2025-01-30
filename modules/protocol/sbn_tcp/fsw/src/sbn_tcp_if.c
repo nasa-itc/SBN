@@ -9,10 +9,12 @@
 // #include <stdlib.h>
 
 /* Start additional includes for hostname snippet */
-#include<sys/socket.h>
-#include<netdb.h>	//hostent
-#include<arpa/inet.h>
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 /* End additional includes for hostname snippet */
 
 #define SBN_TCP_HEARTBEAT_MSG 0xA0
@@ -88,74 +90,80 @@ static SBN_Status_t Init(int Version, CFE_EVS_EventID_t EID, SBN_ProtocolOutlet_
     return SBN_SUCCESS;
 } /* end Init() */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
 {
-    int   AddrLen;
+    int AddrLen;
     char *Colon = strchr(Address, ':');
 
-    AddrLen = Colon - Address;
-    char  AddrHost[AddrLen];
-
-    if (!Colon /*|| (AddrLen = Colon - Address) >= OS_MAX_API_NAME*/)
+    if (!Colon)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid net address");
         return SBN_ERROR;
-    } /* end if */
+    }
 
+    AddrLen = Colon - Address;
+    char AddrHost[AddrLen + 1]; // Ensure enough space for null terminator
     strncpy(AddrHost, Address, AddrLen);
     AddrHost[AddrLen] = '\0';
-    char *ValidatePtr = NULL;
 
+    char *ValidatePtr = NULL;
     OS_SocketPort_t Port = strtol(Colon + 1, &ValidatePtr, 0);
 
     if (!ValidatePtr || ValidatePtr == Colon + 1)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid port");
         return SBN_ERROR;
-    } /* end if */
+    }
 
     if (OS_SocketAddrInit(Addr, OS_SocketDomain_INET) != OS_SUCCESS)
-    {   
+    {
         EVSSendErr(SBN_TCP_SOCK_EID, "socket addr init failed");
         return SBN_ERROR;
-    } /* end if */
+    }
 
     char AddrV4[OS_MAX_API_NAME] = "0.0.0.0";
-    
-    /* 
-        DNS Resolution for FSW Container 
-        Start hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
-    */
-    struct hostent *he;
-    struct in_addr **addr_list;    
-    int i;
-    he = gethostbyname(AddrHost);
-    if (he != NULL) 
+
+    struct addrinfo hints, *res, *p;
+    void *addr;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;  // Use AF_UNSPEC for IPv6 support if needed
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(AddrHost, NULL, &hints, &res) == 0)
     {
-        //OS_printf("sbn_tcp_if.c:ConfAddr:gethostbyname, he Values:\n  name = %s;\n  addr_type = %d;\n  len = %d;\nAddr List:\n", he->h_name, he->h_addrtype, he->h_length);
-        addr_list = (struct in_addr **) he->h_addr_list;
-        for(i = 0; addr_list[i] != NULL; i++) 
+        for (p = res; p != NULL; p = p->ai_next)
         {
-            //Return the first one;
-            strcpy(AddrV4, inet_ntoa(*addr_list[i]));
-            break;
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+
+            // Convert to string and store in AddrV4
+            if (inet_ntop(p->ai_family, addr, AddrV4, INET_ADDRSTRLEN) != NULL)
+            {
+                break;
+            }
         }
+        freeaddrinfo(res);
     }
-    /* 
-        End hostname snippet from: https://stackoverflow.com/questions/38002016/problems-with-gethostbyname-c
-    */ 
 
     if (OS_SocketAddrFromString(Addr, AddrV4) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrV4);
         return SBN_ERROR;
-    } /* end if */
+    }
 
     if (OS_SocketAddrSetPort(Addr, Port) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "setting address port failed (Port=%d)", Port);
         return SBN_ERROR;
-    } /* end if */
+    }
 
     return SBN_SUCCESS;
 } /* end ConfAddr() */
