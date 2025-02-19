@@ -6,6 +6,16 @@
 
 #include <string.h>
 #include <errno.h>
+// #include <stdlib.h>
+
+/* Start additional includes for hostname snippet */
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+/* End additional includes for hostname snippet */
 
 #define SBN_TCP_HEARTBEAT_MSG 0xA0
 
@@ -15,7 +25,7 @@
  * messages will be generated.
  */
 #define SBN_TCP_PEER_HEARTBEAT 5
-/* #define SBN_TCP_PEER_HEARTBEAT 0 */
+// #define SBN_TCP_PEER_HEARTBEAT 0
 
 /**
  * If I haven't received a message from a peer in SBN_TCP_PEER_TIMEOUT seconds,
@@ -24,6 +34,11 @@
  */
 /* #define SBN_TCP_PEER_TIMEOUT 10 */
 #define SBN_TCP_PEER_TIMEOUT 0
+
+
+/* Define Ports for FSW and OnAIR sides of SBN for hacky DNS Resolution. Should be removed if fixed */
+// int32 fsw_port = 2234;
+// int32 onair_port = 2235;
 
 typedef struct
 {
@@ -62,63 +77,93 @@ static SBN_Status_t Init(int Version, CFE_EVS_EventID_t EID, SBN_ProtocolOutlet_
     SBN_TCP_FIRST_EID = EID;
     if (Version != EXP_VERSION) /* TODO: define */
     {
-        OS_printf("SBN_TCP version mismatch: expected %d, got %d\n", EXP_VERSION, Version);
         return SBN_ERROR;
     } /* end if */
 
     if (Outlet == NULL)
     {
-        OS_printf("SBN_TCP outlet is null!\n");
         return SBN_ERROR;
     } /* end if */
 
     memcpy(&SBN, Outlet, sizeof(SBN));
 
-    OS_printf("SBN_TCP Lib Initialized.\n");
     return SBN_SUCCESS;
 } /* end Init() */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
 static SBN_Status_t ConfAddr(OS_SockAddr_t *Addr, const char *Address)
 {
-    char  AddrHost[OS_MAX_API_NAME];
-    int   AddrLen;
+    int AddrLen;
     char *Colon = strchr(Address, ':');
 
-    if (!Colon || (AddrLen = Colon - Address) >= OS_MAX_API_NAME)
+    if (!Colon)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid net address");
         return SBN_ERROR;
-    } /* end if */
+    }
 
+    AddrLen = Colon - Address;
+    char AddrHost[AddrLen + 1]; // Ensure enough space for null terminator
     strncpy(AddrHost, Address, AddrLen);
     AddrHost[AddrLen] = '\0';
-    char *ValidatePtr = NULL;
 
+    char *ValidatePtr = NULL;
     OS_SocketPort_t Port = strtol(Colon + 1, &ValidatePtr, 0);
 
     if (!ValidatePtr || ValidatePtr == Colon + 1)
     {
         EVSSendErr(SBN_TCP_CONFIG_EID, "invalid port");
         return SBN_ERROR;
-    } /* end if */
+    }
 
     if (OS_SocketAddrInit(Addr, OS_SocketDomain_INET) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "socket addr init failed");
         return SBN_ERROR;
-    } /* end if */
+    }
 
-    if (OS_SocketAddrFromString(Addr, AddrHost) != OS_SUCCESS)
+    char AddrV4[OS_MAX_API_NAME] = "0.0.0.0";
+
+    struct addrinfo hints, *res, *p;
+    void *addr;
+    memset(&hints, 0, sizeof hints);
+    hints.ai_family = AF_INET;  // Use AF_UNSPEC for IPv6 support if needed
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(AddrHost, NULL, &hints, &res) == 0)
     {
-        EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrHost);
+        for (p = res; p != NULL; p = p->ai_next)
+        {
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+
+            // Convert to string and store in AddrV4
+            if (inet_ntop(p->ai_family, addr, AddrV4, INET_ADDRSTRLEN) != NULL)
+            {
+                break;
+            }
+        }
+        freeaddrinfo(res);
+    }
+
+    if (OS_SocketAddrFromString(Addr, AddrV4) != OS_SUCCESS)
+    {
+        EVSSendErr(SBN_TCP_SOCK_EID, "setting address host failed (AddrHost=%s)", AddrV4);
         return SBN_ERROR;
-    } /* end if */
+    }
 
     if (OS_SocketAddrSetPort(Addr, Port) != OS_SUCCESS)
     {
         EVSSendErr(SBN_TCP_SOCK_EID, "setting address port failed (Port=%d)", Port);
         return SBN_ERROR;
-    } /* end if */
+    }
 
     return SBN_SUCCESS;
 } /* end ConfAddr() */
@@ -340,6 +385,19 @@ static SBN_Status_t Send(SBN_PeerInterface_t *Peer, SBN_MsgType_t MsgType, SBN_M
     } /* end if */
 
     SBN.PackMsg(&SendBufs[NetData->BufNum], MsgSz, MsgType, CFE_PSP_GetProcessorId(), CFE_PSP_GetSpacecraftId(), Msg);
+
+    // if(MsgType != SBN_TCP_HEARTBEAT_MSG)
+    // {
+    //     printf("sbn_tcp_if.c send: MsgType = %d, MsgSz = %d, Msg = 0x", MsgType, MsgSz);
+    //     uint8_t * msg_char = (uint8_t*) Msg;
+    //     for(SBN_MsgSz_t i = 0; i < MsgSz; i++)
+    //     {
+    //         printf("%02x", (uint8_t*) msg_char[i]);
+    //     }
+    //     printf("\n");
+    // }
+
+
     SBN_MsgSz_t sent_size = OS_write(PeerData->Conn->Socket, &SendBufs[NetData->BufNum], MsgSz + SBN_PACKED_HDR_SZ);
     if (sent_size < MsgSz + SBN_PACKED_HDR_SZ)
     {
@@ -460,6 +518,14 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 Received = OS_read(Conn->Socket, (char *)&RecvBufs[Conn->BufNum] + Conn->RecvSz, ToRead);
 
+                //printf("sbn_tcp_if: Recv: RecvBufs: 0x");
+                //uint8_t * read_char = (uint8_t*) RecvBufs;
+                //for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+                //{
+                //    printf("%02x", (uint8_t*) read_char[i]);
+                //}
+                //printf("\n");
+
                 if (Received <= 0)
                 {
                     CFE_ProcessorID_t ProcessorID = -1;
@@ -486,6 +552,14 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
             {
                 return SBN_ERROR;
             } /* end if */
+              
+            // printf("sbn_tcp_if.c Recv: MsgType = %d, MsgSz = %d, Msg = 0x", *MsgTypePtr, *MsgSzPtr);
+            // uint8_t * msg_char = (uint8_t*) MsgBuf;
+            // for(SBN_MsgSz_t i = 0; i < *MsgSzPtr; i++)
+            // {
+            //     printf("%02x", (uint8_t*) msg_char[i]);
+            // }
+            // printf("\n");
 
             if (!Conn->PeerInterface)
             {

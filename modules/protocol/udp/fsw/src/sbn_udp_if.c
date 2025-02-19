@@ -284,7 +284,7 @@ static SBN_Status_t Recv(SBN_NetInterface_t *Net, SBN_MsgType_t *MsgTypePtr, SBN
     SBN_PeerInterface_t *Peer = SBN.GetPeer(Net, *ProcessorIDPtr, *SpacecraftIDPtr);
     if (Peer == NULL)
     {
-        EVSSendErr(SBN_UDP_DEBUG_EID, "ERROR: unknown peer %d:%d", *SpacecraftIDPtr, *ProcessorIDPtr);
+        EVSSendErr(SBN_UDP_DEBUG_EID, "ERROR: SBN UDP Recv: unknown peer %d:%d", *SpacecraftIDPtr, *ProcessorIDPtr);
         return SBN_ERROR;
     } /* end if */
 

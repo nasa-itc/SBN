@@ -77,6 +77,14 @@ static SBN_Status_t SendLocalSubToPeer(int SubType, CFE_SB_MsgId_t MsgID, CFE_SB
     Pack_MsgID(&Pack, MsgID);
     Pack_Data(&Pack, &QoS, sizeof(QoS)); /* 2 uint8's */
 
+    // printf("sbn_subs: SendLocalSubToPeer: Type: %d, MsgID: %lu, MsgSz: %lu, Msg 0x", SubType, CFE_SB_MsgIdToValue(MsgID), Pack.BufUsed);
+    // uint8_t * msg_char = (uint8_t*) Buf;
+    // for(size_t i = 0; i < Pack.BufUsed; i++)
+    // {
+    //     printf("%02x", (uint8_t*) msg_char[i]);
+    // }
+    // printf("\n");
+
     EVSSendDbg(SBN_PEER_EID, "send local sub to peer %d:%d", Peer->SpacecraftID, Peer->ProcessorID);
     return SBN_SendNetMsg(SubType, Pack.BufUsed, Buf, Peer);
 } /* end SendLocalSubToPeer */
@@ -101,6 +109,19 @@ SBN_Status_t SBN_SendLocalSubsToPeer(SBN_PeerInterface_t *Peer)
         /* 2 uint8's */
         Pack_Data(&Pack, &SBN.Subs[i].QoS, sizeof(SBN.Subs[i].QoS));
     } /* end for */
+    
+    //printf("sbn_subs: SendLocalSubsToPeer: SubCount: %lu, MsgSz: %lu, MsgIds:\n", SBN.SubCnt, Pack.BufUsed);
+    //for(i = 0; i < SBN.SubCnt; i++)
+    //{
+    //    printf("0x%08x\n", CFE_SB_MsgIdToValue(SBN.Subs[i].MsgID));
+    //}
+    //printf("Msg 0x");
+    //uint8_t * msg_char = (uint8_t*) Buf;
+    //for(size_t i = 0; i < Pack.BufUsed; i++)
+    //{
+    //    printf("%02x", (uint8_t*) msg_char[i]);
+    //}
+    //printf("\n");
 
     EVSSendDbg(SBN_PEER_EID, "send local subs to peer %d:%d", Peer->SpacecraftID, Peer->ProcessorID);
     return SBN_SendNetMsg(SBN_SUB_MSG, Pack.BufUsed, Buf, Peer);
@@ -416,6 +437,8 @@ static SBN_Status_t ProcessSubFromPeer(SBN_PeerInterface_t *Peer, CFE_SB_MsgId_t
     Filter_Context.MySpacecraftID  = CFE_PSP_GetSpacecraftId();
     Filter_Context.PeerProcessorID = Peer->ProcessorID;
     Filter_Context.PeerSpacecraftID  = Peer->SpacecraftID;
+
+    printf("snb_subs: ProcessSubFromPeer: MyProcessorID = %d, MySpacecraftID = %d, PeerProcessorID = %d, PeerSpacecraftID = %d, MsgID = 0x%04x\n", Filter_Context.MyProcessorID, Filter_Context.MySpacecraftID, Filter_Context.PeerProcessorID, Filter_Context.PeerSpacecraftID, CFE_SB_MsgIdToValue(MsgID));
 
     for (FilterIdx = 0; FilterIdx < Peer->FilterCnt; FilterIdx++)
     {
