@@ -28,7 +28,12 @@
 */
 #define SBN_CMD_MID 0x18DA
 
-#define SBN_TLM_MID 0x08DC
+// #define SBN_TLM_MID 0x08DC
+#define SBN_HK_TLM_MID        0x08DB  // Basic HK
+#define SBN_HKNET_TLM_MID     0x08DC  // Network HK
+#define SBN_HKPEER_TLM_MID    0x08DD  // Peer HK
+#define SBN_HKPEERSUBS_TLM_MID 0x08DE // Peer Subscriptions
+#define SBN_HKMYSUBS_TLM_MID  0x08DF  // My Subscriptions
 /*
 ** Include Files
 */
