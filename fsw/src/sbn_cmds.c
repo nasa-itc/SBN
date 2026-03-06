@@ -139,7 +139,8 @@ static void NoopCmd(CFE_MSG_Message_t *MsgPtr)
         return;
     } /* end if */
 
-    EVSSendDbg(SBN_CMD_EID, "no-op command");
+    // EVSSendDbg(SBN_CMD_EID, "no-op command");
+    EVSSendInfo(SBN_CMD_EID, "no-op command");
 
     SBN.CmdCnt++;
 } /* end NoopCmd */
@@ -254,7 +255,7 @@ static void HKCmd(CFE_MSG_Message_t *MsgPtr)
     CFE_MSG_Message_t *HKMsg = (CFE_MSG_Message_t *)HKBuf;
     Pack_t Pack;
 
-    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_TLM_MID), SBN_HK_LEN);
+    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_HK_TLM_MID), SBN_HK_LEN);
 
     Pack_Init(&Pack, HKBuf + sizeof(CFE_MSG_TelemetryHeader_t), SBN_HK_LEN - sizeof(CFE_MSG_TelemetryHeader_t), 1);
 
@@ -304,7 +305,7 @@ static void HKNetCmd(CFE_MSG_Message_t *MsgPtr)
     CFE_MSG_Message_t *HKMsg = (CFE_MSG_Message_t *)HKBuf;
     Pack_t Pack;
 
-    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_TLM_MID), SBN_HKNET_LEN);
+    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_HKNET_TLM_MID), SBN_HKNET_LEN);
 
     Pack_Init(&Pack, HKBuf + sizeof(CFE_MSG_TelemetryHeader_t), SBN_HKNET_LEN - sizeof(CFE_MSG_TelemetryHeader_t), 1);
 
@@ -362,7 +363,7 @@ static void HKPeerCmd(CFE_MSG_Message_t *MsgPtr)
     CFE_MSG_Message_t *HKMsg = (CFE_MSG_Message_t *)HKBuf;
     Pack_t Pack;
 
-    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_TLM_MID), SBN_HKPEER_LEN);
+    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_HKPEER_TLM_MID), SBN_HKPEER_LEN);
 
     Pack_Init(&Pack, HKBuf + sizeof(CFE_MSG_TelemetryHeader_t), SBN_HKPEER_LEN - sizeof(CFE_MSG_TelemetryHeader_t), 1);
 
@@ -406,7 +407,7 @@ static void MySubsCmd(CFE_MSG_Message_t *MsgPtr)
     CFE_MSG_Message_t *HKMsg = (CFE_MSG_Message_t *)HKBuf;
     Pack_t Pack;
 
-    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_TLM_MID), SBN_HKMYSUBS_LEN);
+    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_HKMYSUBS_TLM_MID), SBN_HKMYSUBS_LEN);
 
     Pack_Init(&Pack, HKBuf + sizeof(CFE_MSG_TelemetryHeader_t), SBN_HKMYSUBS_LEN - sizeof(CFE_MSG_TelemetryHeader_t), 1);
 
@@ -488,7 +489,7 @@ static void PeerSubsCmd(CFE_MSG_Message_t *MsgPtr)
     CFE_MSG_Message_t *HKMsg = (CFE_MSG_Message_t *)HKBuf;
     Pack_t Pack;
 
-    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_TLM_MID), SBN_HKPEERSUBS_LEN);
+    CFE_MSG_Init(HKMsg, CFE_SB_ValueToMsgId(SBN_HKPEERSUBS_TLM_MID), SBN_HKPEERSUBS_LEN);
 
     Pack_Init(&Pack, HKBuf + sizeof(CFE_MSG_TelemetryHeader_t), SBN_HKPEERSUBS_LEN - sizeof(CFE_MSG_TelemetryHeader_t), 1);
 
